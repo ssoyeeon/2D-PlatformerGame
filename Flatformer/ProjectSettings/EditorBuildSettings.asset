@@ -6,6 +6,8 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/SolarSoft_Platformer_Free/Scenes/Demo Scene.unity
+    path: Assets/Settings/Scenes/URP2DSceneTemplate.unity
     guid: 2cda990e2423bbf4892e6590ba056729
-  m_configObjects: {}
+  m_configObjects:
+    com.unity.input.settings: {fileID: 11400000, guid: 2c55f55008530d64a891687a05373c19, type: 2}
+  m_UseUCBPForAssetBundles: 0
