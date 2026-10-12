@@ -1708,9 +1708,11 @@ MonoBehaviour:
   jumpForce: 3
   mouseSensitivity: 0.2
   cameraTransform: {fileID: 330585546}
-  settingCanvas: {fileID: 357451935}
-  isCanvasOpen: 0
   sensitivityText: {fileID: 1674891019}
+  settingCanvas: {fileID: 357451935}
+  bulletPrefab: {fileID: 855081916987917287, guid: 2a5facdcc53c9264aba1c530dcff1d01, type: 3}
+  fireRate: 1
+  bulletSpeed: 30
 --- !u!4 &1895043590 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 2faa610713d3b3c439473daa55e8c60a, type: 3}

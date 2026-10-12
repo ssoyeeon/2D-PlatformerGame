@@ -19,6 +19,11 @@ public class PlayerController : MonoBehaviour
     public GameObject settingCanvas;
     private bool isCanvasOpen = false;
 
+    [Header("Bullet")]
+    public GameObject bulletPrefab;
+    public float fireRate = 0.2f;
+    private float fireTimer = 0f;
+
     private bool isGrounded;
     private Rigidbody rb;
     private Animator anim;
@@ -56,6 +61,17 @@ public class PlayerController : MonoBehaviour
             Cursor.visible = isCanvasOpen;
         }
 
+        if (fireTimer > 0f)
+        {
+            fireTimer -= Time.deltaTime;
+        }
+
+        if (Mouse.current != null && Mouse.current.leftButton.isPressed && fireTimer <= 0f)
+        {
+            Shoot();
+            fireTimer = fireRate;
+        }
+
         if (isCanvasOpen) return;
 
         ProcessMouseLook();
@@ -91,6 +107,14 @@ public class PlayerController : MonoBehaviour
         {
             bool isWalking = isGrounded && (inputDir.sqrMagnitude > 0f);
             anim.SetBool(isWalkingHash, isWalking);
+        }
+    }
+
+    void Shoot()
+    {
+        if (bulletPrefab != null && cameraTransform != null)
+        {
+            Instantiate(bulletPrefab, cameraTransform.position + cameraTransform.forward * 1.0f, cameraTransform.rotation);
         }
     }
 
