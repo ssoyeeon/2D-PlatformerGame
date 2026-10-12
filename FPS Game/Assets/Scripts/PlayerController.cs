@@ -1,34 +1,65 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using TMPro;
 
 public class PlayerController : MonoBehaviour
 {
     [Header("Movement Stats")]
-    public float moveSpeed = 6f;          // 이동 속도
-    public float jumpForce = 7f;          // 점프력
+    public float walkSpeed = 2f;
+    public float runSpeed = 3f;
+    public float jumpForce = 3f;
 
-    [Header("Ground Setting")]
-    public string groundLayerName = "Ground"; // 검사할 레이어 이름
+    [Header("Mouse Look")]
+    public float mouseSensitivity = 0.2f;
+    public Transform cameraTransform;
+    public TextMeshProUGUI sensitivityText;
+    private float verticalRotation = 0f;
 
-    private bool isGrounded;              // 바닥 충돌 여부
+    [Header("UI Settings")]
+    public GameObject settingCanvas;
+    private bool isCanvasOpen = false;
+
+    private bool isGrounded;
     private Rigidbody rb;
     private Animator anim;
 
     private int isWalkingHash = Animator.StringToHash("isWalking");
     private int jumpTriggerHash = Animator.StringToHash("Jump");
 
+    private void Awake()
+    {
+        settingCanvas.SetActive(false);
+    }
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         anim = GetComponent<Animator>();
 
+        cameraTransform = Camera.main.transform;
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
     void Update()
     {
         if (Keyboard.current == null) return;
 
-        // 1. WASD 입력
+        if (Keyboard.current.escapeKey.wasPressedThisFrame)
+        {
+            isCanvasOpen = !isCanvasOpen;
+
+            settingCanvas.SetActive(isCanvasOpen);
+
+            Cursor.lockState = isCanvasOpen ? CursorLockMode.None : CursorLockMode.Locked;
+            Cursor.visible = isCanvasOpen;
+        }
+
+        if (isCanvasOpen) return;
+
+        ProcessMouseLook();
+
         float moveX = 0f;
         float moveZ = 0f;
 
@@ -40,10 +71,11 @@ public class PlayerController : MonoBehaviour
         Vector3 inputDir = new Vector3(moveX, 0f, moveZ).normalized;
         Vector3 moveDirection = transform.right * inputDir.x + transform.forward * inputDir.z;
 
-        // 2. 실제 물리 이동 (공중에서 W를 눌러도 앞으로 이동함)
-        rb.linearVelocity = new Vector3(moveDirection.x * moveSpeed, rb.linearVelocity.y, moveDirection.z * moveSpeed);
+        bool isShiftPressed = Keyboard.current.leftShiftKey.isPressed;
+        float currentSpeed = isShiftPressed ? runSpeed : walkSpeed;
 
-        // 3. 점프 처리
+        rb.linearVelocity = new Vector3(moveDirection.x * currentSpeed, rb.linearVelocity.y, moveDirection.z * currentSpeed);
+
         if (isGrounded && Keyboard.current.spaceKey.wasPressedThisFrame)
         {
             rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpForce, rb.linearVelocity.z);
@@ -55,7 +87,6 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        // 4. 애니메이션 제어 (땅에 닿아있을 때만 걷기 애니메이션 발동)
         if (anim != null)
         {
             bool isWalking = isGrounded && (inputDir.sqrMagnitude > 0f);
@@ -63,14 +94,41 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    // 5. 충돌 판정
+    void ProcessMouseLook()
+    {
+        if (Mouse.current == null) return;
+
+        Vector2 mouseDelta = Mouse.current.delta.ReadValue();
+        float mouseX = mouseDelta.x * mouseSensitivity;
+        float mouseY = mouseDelta.y * mouseSensitivity;
+
+        transform.Rotate(Vector3.up * mouseX);
+
+        verticalRotation -= mouseY;
+        verticalRotation = Mathf.Clamp(verticalRotation, -90f, 90f);
+
+        if (cameraTransform != null)
+        {
+            cameraTransform.localEulerAngles = new Vector3(verticalRotation, 0f, 0f);
+        }
+    }
+
+    public void SetMouseSensitivity(float sensitivity)
+    {
+        mouseSensitivity = sensitivity;
+
+        if (sensitivityText != null)
+        {
+            sensitivityText.text = sensitivity.ToString("F2");
+        }
+    }
+
     private void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.CompareTag("Ground"))
         {
             isGrounded = true;
 
-            // 착지 시 공중 잔여 점프 트리거 삭제
             if (anim != null)
             {
                 anim.ResetTrigger(jumpTriggerHash);
